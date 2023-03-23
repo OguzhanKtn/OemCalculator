@@ -15,9 +15,6 @@ const ProductController =(function(){
 
     const data = {
         products : [
-            {id:1, name:"Monitör",price:100},
-            {id:2, name:"Ram",price:30},
-            {id:3, name:"Klavye",price:10}
         ],
         selectedProduct:null,
         totalPrice:0
@@ -29,6 +26,13 @@ const ProductController =(function(){
         },
         getData : function(){
             return data;
+        },
+        addProduct : function(name,price){
+           id = data.products.length + 1;
+
+            const newProduct = new Product(id,name,parseFloat(price));
+            data.products.push(newProduct);
+            return newProduct;
         }
     }
 
@@ -41,7 +45,8 @@ const UIController =(function(){
         productList : "#item-list",
         addButton : ".addBtn",
         productName : "#productName",
-        productPrice : "#productPrice"
+        productPrice : "#productPrice",
+        productCard : "#productCard"
     }
 
     return{
@@ -68,6 +73,30 @@ const UIController =(function(){
         },
         getSelectors : function(){
             return Selectors;
+        },
+        addProduct : function(prd){
+            document.querySelector(Selectors.productCard).style.display = "block";
+            var item = `
+                <tr>
+                    <td>${prd.id}</td>
+                    <td>${prd.name}</td>
+                    <td>${prd.price} $</td>
+                    <td class="text-right">
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="far fa-edit"></i>
+                    </button>
+                     </td>
+                 </tr>
+            
+            `;
+            document.querySelector(Selectors.productList).innerHTML += item;
+        },
+        clearInputs : function(){
+            document.querySelector(Selectors.productName).value = "";
+            document.querySelector(Selectors.productPrice).value = "";
+        },
+        hideCard : function(){
+            document.querySelector(Selectors.productCard).style.display="none";
         }
     }
 })();
@@ -77,11 +106,38 @@ const App =(function(ProductCtrl,UICtrl){
 
     const UISelectors = UIController.getSelectors();
 
+    // load event listeners
+    const loadEventListeners = function(){
+        
+        // add product event
+        document.querySelector(UISelectors.addButton).addEventListener("click",function(e){
+
+            const productName = document.querySelector(UISelectors.productName).value;
+            const productPrice = document.querySelector(UISelectors.productPrice).value;
+
+            if(productName!=="" && productPrice!==""){
+               const newProduct = ProductCtrl.addProduct(productName,productPrice);
+               UIController.addProduct(newProduct);
+
+               UIController.clearInputs();
+
+            }
+
+            e.preventDefault();
+
+        })
+    }
+
     return{
         init : function(){
             const products = ProductCtrl.getProducts();
 
-            UICtrl.createProductList(products);
+            if(products.length == 0){
+                UICtrl.hideCard();
+            }else{
+                UICtrl.createProductList(products);
+            }
+            loadEventListeners();
         }
     }
 
