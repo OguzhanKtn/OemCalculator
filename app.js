@@ -14,10 +14,9 @@ const ProductController =(function(){
     }
 
     const data = {
-        products : [
-        ],
+        products : [],
         selectedProduct:null,
-        totalPrice:0
+        totalPrice :0
     }
 
     return{
@@ -33,6 +32,15 @@ const ProductController =(function(){
             const newProduct = new Product(id,name,parseFloat(price));
             data.products.push(newProduct);
             return newProduct;
+        },
+        getTotal : function(){
+            let total = 0;
+            
+            data.products.forEach(function(item){
+                total += item.price;
+            });
+            data.totalPrice = total;
+            return data.totalPrice;
         }
     }
 
@@ -46,7 +54,10 @@ const UIController =(function(){
         addButton : ".addBtn",
         productName : "#productName",
         productPrice : "#productPrice",
-        productCard : "#productCard"
+        productCard : "#productCard",
+        totalTl : "#total-tl",
+        totalDolar : "#total-dolar",
+        saveChanges : ".saveChng"
     }
 
     return{
@@ -97,6 +108,10 @@ const UIController =(function(){
         },
         hideCard : function(){
             document.querySelector(Selectors.productCard).style.display="none";
+        },
+        showTotal : function(total){
+            document.querySelector(Selectors.totalDolar).textContent = total;
+            document.querySelector(Selectors.totalTl).textContent = total * 18;
         }
     }
 })();
@@ -110,22 +125,48 @@ const App =(function(ProductCtrl,UICtrl){
     const loadEventListeners = function(){
         
         // add product event
-        document.querySelector(UISelectors.addButton).addEventListener("click",function(e){
+        document.querySelector(UISelectors.addButton).addEventListener("click",productAddSubmit);
 
-            const productName = document.querySelector(UISelectors.productName).value;
-            const productPrice = document.querySelector(UISelectors.productPrice).value;
+        // edit product event
+        document.querySelector(UISelectors.productList).addEventListener("click",productEditSubmit);
 
-            if(productName!=="" && productPrice!==""){
-               const newProduct = ProductCtrl.addProduct(productName,productPrice);
-               UIController.addProduct(newProduct);
+        // save changes event
+        document.querySelector(UISelectors.saveChanges).addEventListener("click",productChangeSubmit);
 
-               UIController.clearInputs();
+    }
 
-            }
+    const productAddSubmit = function(e){
+        const productName = document.querySelector(UISelectors.productName).value;
+        const productPrice = document.querySelector(UISelectors.productPrice).value;
 
-            e.preventDefault();
+        if(productName!=="" && productPrice!==""){
+            // Add product
+           const newProduct = ProductCtrl.addProduct(productName,productPrice);
 
-        })
+           // add item to list
+           UIController.addProduct(newProduct);
+
+           // get total
+           const total = ProductCtrl.getTotal();
+
+          // show total
+            UICtrl.showTotal(total);
+
+            // clear inputs
+           UIController.clearInputs();
+
+        }
+
+        e.preventDefault();
+    }
+
+    const productEditSubmit = function(e){
+
+        if(e.target.classList.contains("fa-edit")){
+            
+        }
+
+        e.preventDefault();
     }
 
     return{
