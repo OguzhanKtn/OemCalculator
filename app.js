@@ -1,5 +1,50 @@
 // Storage Controller
-const StorageController = (function () {})();
+const StorageController = (function () {
+
+  return{
+    storeProduct : function(product){
+      let products;
+      if(localStorage.getItem("products") == null){
+          products = [];
+          products.push(product);
+      }else{
+        products = JSON.parse(localStorage.getItem("products"));
+        products.push(product);
+      }
+      localStorage.setItem("products",JSON.stringify(products));
+    },
+    getProducts : function(){
+      let products;
+      if(localStorage.getItem("products") == null){
+          products = [];
+      }else{
+          products = JSON.parse(localStorage.getItem("products"));
+      }
+      return products;
+    },
+    updateProduct : function(product){
+      let products = JSON.parse(localStorage.getItem("products"));
+
+      products.forEach((prd,index) =>{
+        if(prd.id == product.id){
+          products.splice(index,1,product);
+        }
+      });
+      localStorage.setItem("products",JSON.stringify(products));
+    },
+    deleteProduct : function(product){
+      let products = JSON.parse(localStorage.getItem("products"));
+
+      products.forEach((prd,index)=>{
+        if(product.id == prd.id){
+          products.splice(index,1);
+        }
+      });
+      localStorage.setItem("products",JSON.stringify(products));
+    }
+  }
+
+})();
 
 // Product Controller
 const ProductController = (function () {
@@ -10,7 +55,7 @@ const ProductController = (function () {
   };
 
   const data = {
-    products: [],
+    products: StorageController.getProducts(),
     selectedProduct: null,
     totalPrice: 0,
   };
@@ -94,25 +139,25 @@ const UIController = (function () {
   };
 
   return {
-    // createProductList : function(products){
-    //     let html ="";
+     createProductList : function(products){
+         let html ="";
 
-    //     products.forEach(prd => {
-    //         html += `
-    //             <tr>
-    //                 <td>${prd.id}</td>
-    //                 <td>${prd.name}</td>
-    //                 <td>${prd.price} $</td>
-    //                 <td class="text-right">
-    //                     <i class="far fa-edit"></i>
-    //                 </td>
-    //             </tr>
+         products.forEach(prd => {
+             html += `
+                 <tr>
+                     <td>${prd.id}</td>
+                     <td>${prd.name}</td>
+                     <td>${prd.price} $</td>
+                     <td class="text-right">
+                         <i class="far fa-edit"></i>
+                     </td>
+                 </tr>
 
-    //         `;
-    //     });
+            `;
+         });
 
-    //     document.querySelector(Selectors.productList).innerHTML = html;
-    // },
+         document.querySelector(Selectors.productList).innerHTML = html;
+     },
     getSelectors: function () {
       return Selectors;
     },
@@ -201,7 +246,7 @@ const UIController = (function () {
 })();
 
 // App Controller
-const App = (function (ProductCtrl, UICtrl) {
+const App = (function (ProductCtrl, UICtrl,StorageCtrl) {
   const UISelectors = UICtrl.getSelectors();
 
   // load event listeners
@@ -242,6 +287,9 @@ const App = (function (ProductCtrl, UICtrl) {
 
       // add item to list
       UIController.addProduct(newProduct);
+
+      // add product to ls
+      StorageCtrl.storeProduct(newProduct);
 
       // get total
       const total = ProductCtrl.getTotal();
@@ -297,6 +345,9 @@ const App = (function (ProductCtrl, UICtrl) {
       // show total
       UICtrl.showTotal(total);
 
+      // update storage
+      StorageCtrl.updateProduct(updatedProduct);
+
       UICtrl.addingState();
     }
 
@@ -315,6 +366,9 @@ const App = (function (ProductCtrl, UICtrl) {
     // delete from ui
     UICtrl.deleteProduct();
 
+    // delete from storage
+    StorageCtrl.deleteProduct(selectedProduct);
+
     // hide card
     const productNumbers = ProductCtrl.getProducts();
     if(productNumbers.length == 0){
@@ -328,14 +382,16 @@ const App = (function (ProductCtrl, UICtrl) {
     init: function () {
       UICtrl.addingState();
 
-      const products = ProductCtrl.getProducts();
+      const products = StorageController.getProducts();
 
       if (products.length == 0) {
         UICtrl.hideCard();
+      }else{
+        UICtrl.createProductList(products);
       }
       loadEventListeners();
     },
   };
-})(ProductController, UIController);
+})(ProductController, UIController,StorageController);
 
 App.init();
